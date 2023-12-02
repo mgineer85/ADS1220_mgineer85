@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include <SPI.h>
 
-#define ADS1220_CS_PIN_DEFAULT 7   // chip select pin
-#define ADS1220_DRDY_PIN_DEFAULT 6 // data ready pin
+#define ADS1220_CS_PIN_DEFAULT 8    // 7   // chip select pin
+#define ADS1220_DRDY_PIN_DEFAULT 14 // 6 // data ready pin
 
 // ADS1220 SPI commands
 typedef enum
@@ -253,17 +253,18 @@ public: // ADS1220 related functions
   bool setIDAC1Routing(ADS1220_I1MUX_Values i1mux);        // CONF3: IDAC1 routing config
 
   // commands
-  bool start_single_shot_measurement();
+  bool startSingleShotMeasurement();
   bool reset();
   bool powerDown();
 
   // utility functions that complete the lib
-  bool available();                                 // Returns true if DRDY Ready is set (conversion is complete)
-  int32_t getReadingRaw();                          // straight from adc
-  int32_t getAverageReadingRaw(uint8_t number = 8); // straight from adc but averaged
-  int32_t getReading();                             // includes offset from internal calibration
-  bool internalCalibration();                       // Call after mode changes
-  bool sensorConnected();                           // Use burnout current to detect open connection (no sensor)
+  bool available();                                   // Returns true if DRDY Ready is set (conversion is complete)
+  bool waitUntilAvailable(uint16_t timeout_ms = 100); // blocks until timeout (return false) or data avail within timeout (return true)
+  int32_t getReading();                               // includes offset from internal calibration
+  int32_t getAverageReading(uint8_t number = 4);      // get average corrected offset from internal calibration
+  bool internalCalibration();                         // Call after mode changes
+  bool sensorConnected();                             // Use burnout current to detect open connection (no sensor)
+  void printRegisterValues();
 
 public:
   // bool tara();
@@ -272,6 +273,10 @@ public:
 
 private: // ADS1220 related stuff
   int32_t _internal_calibration_offset = 0;
+  int32_t getReadingRaw();                          // straight from adc
+  int32_t getAverageReadingRaw(uint8_t number = 4); // straight from adc but averaged
+  void setInternalCalibrationOffset(int32_t val);
+  int32_t getInternalCalibrationOffset();
 
 private: // SPI and communication related stuff
   SPIClass *_spiPort;
