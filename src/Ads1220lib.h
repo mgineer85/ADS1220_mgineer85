@@ -253,9 +253,9 @@ public: // ADS1220 related functions
   bool setIDAC1Routing(ADS1220_I1MUX_Values i1mux);        // CONF3: IDAC1 routing config
 
   // commands
-  bool startSingleShotMeasurement();
-  bool reset();
-  bool powerDown();
+  bool cmdStartSync();
+  bool cmdReset();
+  bool cmdPowerDown();
 
   // utility functions that complete the lib
   bool available();                                   // Returns true if DRDY Ready is set (conversion is complete)

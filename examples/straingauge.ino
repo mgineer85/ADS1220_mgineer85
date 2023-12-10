@@ -52,7 +52,7 @@ void loop()
     {
         delay(500);
         reading = ads.getReading() / 128;
-        ads.powerDown();
+        ads.cmdPowerDown();
         Serial.print("reading: ");
         Serial.println(reading);
     }

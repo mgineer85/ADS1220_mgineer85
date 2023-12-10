@@ -28,7 +28,7 @@ bool ADS1220::begin(uint8_t DRDY_pin, uint8_t CS_pin, SPIClass &spiPort)
 
   bool result = true; // Accumulate a result as we do the setup
 
-  result &= reset();       // Reset all registers
+  result &= cmdReset();    // Reset all registers
   result &= isConnected(); // check connection
   // result &= command(ADS1220_START); // Start/Sync
   // result &= setConversionMode(ADS1220_CM_SINGLE_SHOT_MODE); // Power on analog and digital sections of the scale
@@ -40,7 +40,7 @@ bool ADS1220::begin(uint8_t DRDY_pin, uint8_t CS_pin, SPIClass &spiPort)
 bool ADS1220::isConnected()
 {
   // SPI cannot detect device presence - try to mod registers and check result
-  // prerequisite: only on startup after reset and registers are all 0
+  // prerequisite: only on startup after cmdReset and registers are all 0
   // just a test if the ADS1220 is connected
   setBit(ADS1220_CTRL0_PGA_BYPASS, ADS1220_CTRL0);
   bool pgabypassed = getBit(ADS1220_CTRL0_PGA_BYPASS, ADS1220_CTRL0);
@@ -57,12 +57,12 @@ bool ADS1220::isConnected()
   }
 }
 
-bool ADS1220::startSingleShotMeasurement()
+bool ADS1220::cmdStartSync()
 {
   return command(ADS1220_START);
 }
 // Resets all registers to Power Of Defaults
-bool ADS1220::reset()
+bool ADS1220::cmdReset()
 {
 
   bool retval = command(ADS1220_RESET);
@@ -73,7 +73,7 @@ bool ADS1220::reset()
 
   return retval;
 }
-bool ADS1220::powerDown()
+bool ADS1220::cmdPowerDown()
 {
   return command(ADS1220_PWRDOWN);
 }
@@ -222,7 +222,7 @@ int32_t ADS1220::getReadingRaw()
 
   if (getBit(ADS1220_CTRL1_CM, ADS1220_CTRL1) == ADS1220_CM_SINGLE_SHOT_MODE)
   {
-    startSingleShotMeasurement();
+    cmdStartSync();
   }
 
   if (!waitUntilAvailable(500))
@@ -277,10 +277,11 @@ bool ADS1220::internalCalibration()
   ADS1220_MUX_Values mux_before_calibration = getMux();
   // internally short mux - so read output shall be 0
   setMux(ADS1220_MUX_AINp_AINn_SHORTED_TO_AVDD_AVSS_DIV2);
+  delay(10);
   // throw away to ensure stable results
-  getAverageReadingRaw(2);
+  getAverageReadingRaw();
   // deviation from 0 is offset that is permanently removed from following readings
-  setInternalCalibrationOffset(getAverageReadingRaw());
+  setInternalCalibrationOffset(getAverageReadingRaw(8));
   // restore former mux config
   setMux(mux_before_calibration);
 
